@@ -6,6 +6,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 import html as htmllib
+import time
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
@@ -27,7 +28,7 @@ st.set_page_config(
 
 API_URL = "https://api.nobelprize.org/2.1/laureates"
 WIKI_URL = "https://en.wikipedia.org/api/rest_v1/page/summary/{}"
-HEADERS = {"User-Agent": "NobelDashboard/1.0 (proyecto educativo en Streamlit)"}
+HEADERS = {"User-Agent": "NobelDashboard/1.0 (https://streamlit.io; proyecto educativo de visualización de datos)"}
 CURRENT_YEAR = date.today().year
 
 # Paleta
@@ -305,19 +306,71 @@ def load_data() -> pd.DataFrame:
     return df.sort_values(["year", "cat"]).reset_index(drop=True)
 
 
-@st.cache_data(ttl=60 * 60 * 24 * 7, show_spinner=False)
+def _get_json(url: str, params: dict | None = None) -> dict:
+    """GET con reintentos si Wikipedia limita la cantidad de pedidos (error 429)."""
+    for attempt in range(3):
+        r = requests.get(url, params=params, headers=HEADERS, timeout=8)
+        if r.status_code == 429:
+            time.sleep(1.5 * (attempt + 1))
+            continue
+        r.raise_for_status()
+        return r.json()
+    raise RuntimeError("Demasiados pedidos")
+
+
+def _fetch_image(slug: str) -> str | None:
+    """Busca la foto de una persona en tres fuentes, de la más rápida a la más completa."""
+    title = slug.replace("_", " ")
+    # 1) Resumen de Wikipedia
+    try:
+        src = (_get_json(WIKI_URL.format(quote(slug, safe=""))).get("thumbnail") or {}).get("source")
+        if src:
+            return src
+    except Exception:
+        pass
+    # 2) Imagen principal del artículo
+    try:
+        j = _get_json("https://en.wikipedia.org/w/api.php", {"action": "query", "titles": title, "prop": "pageimages",
+                                                             "pithumbsize": 320, "redirects": 1, "format": "json"})
+        for page in ((j.get("query") or {}).get("pages") or {}).values():
+            src = (page.get("thumbnail") or {}).get("source")
+            if src:
+                return src
+    except Exception:
+        pass
+    # 3) Foto oficial cargada en Wikidata (Wikimedia Commons)
+    try:
+        j = _get_json("https://www.wikidata.org/w/api.php", {"action": "wbgetentities", "sites": "enwiki", "titles": title,
+                                                             "props": "claims", "format": "json"})
+        for ent in (j.get("entities") or {}).values():
+            p18 = ((ent.get("claims") or {}).get("P18") or [])
+            if p18:
+                fname = p18[0]["mainsnak"]["datavalue"]["value"].replace(" ", "_")
+                return f"https://commons.wikimedia.org/wiki/Special:FilePath/{quote(fname)}?width=320"
+    except Exception:
+        pass
+    return None
+
+
+@st.cache_resource(show_spinner=False)
+def _image_store() -> dict:
+    return {"ok": {}, "failed": {}}
+
+
 def wiki_images(slugs: tuple) -> dict:
-    """Miniaturas de Wikipedia (Wikimedia Commons) en paralelo."""
-    def one(slug):
-        try:
-            r = requests.get(WIKI_URL.format(quote(slug, safe="")), headers=HEADERS, timeout=6)
-            if r.ok:
-                return slug, (r.json().get("thumbnail") or {}).get("source")
-        except Exception:
-            pass
-        return slug, None
-    with ThreadPoolExecutor(max_workers=8) as ex:
-        return dict(ex.map(one, slugs))
+    """Fotos de Wikipedia / Wikimedia Commons. Guarda las encontradas y reintenta las que fallan cada 10 minutos."""
+    store = _image_store()
+    now = time.time()
+    missing = [s for s in slugs if s not in store["ok"] and now - store["failed"].get(s, 0) > 600]
+    if missing:
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            for slug, src in zip(missing, ex.map(_fetch_image, missing)):
+                if src:
+                    store["ok"][slug] = src
+                    store["failed"].pop(slug, None)
+                else:
+                    store["failed"][slug] = now
+    return {s: store["ok"].get(s) for s in slugs}
 
 
 def norm(s: str) -> str:
@@ -866,8 +919,6 @@ with tabs[6]:
         <p><b>Por qué lo merecía.</b> {esc(merit)}</p>
         <p class="meta" style="margin-top:10px"><b>Por qué no lo ganó.</b> {esc(why_not)}</p></div>""")
     render('<div class="grid">' + "".join(cards) + "</div>")
-    st.write("")
-    render('<div class="dark"><h3>¿Y los que siguen vivos?</h3><p>Cada octubre, las casas de apuestas y la prensa repiten candidatos que todavía esperan: el «no» de hoy puede ser el «sí» del año que viene. Esta lista se concentra en casos históricos, no en candidatos actuales que todavía pueden ganarlo.</p></div>')
 
 # ═════════════════════════════════════════════════════════════════════════════
 # 8 · EXPLORÁ
