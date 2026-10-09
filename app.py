@@ -376,7 +376,6 @@ FAMILIES = [
 ]
 
 CONTROVERSIES = [
-    ("Gandhi, el gran ausente", "Fue nominado cinco veces y nunca lo ganó. En 1948, el año de su asesinato, el Comité declaró desierto el premio de la Paz."),
     ("Kissinger y Le Duc Tho (1973)", "El Nobel de la Paz por el alto el fuego en Vietnam provocó la renuncia de dos miembros del Comité. Le Duc Tho lo rechazó porque la guerra seguía."),
     ("Los premios prohibidos", "Tras el Nobel de la Paz al pacifista Carl von Ossietzky (1935), preso en un campo de concentración, Hitler prohibió a los alemanes aceptarlo. La URSS forzó a Boris Pasternak a rechazar el de Literatura 1958."),
     ("Obama (2009)", "Lo recibió con menos de un año en la presidencia. Las nominaciones cerraron a días de su asunción, y hasta él dijo sentirse sorprendido."),
@@ -462,7 +461,7 @@ else:
     no_data()
 
 st.write("")
-tabs = st.tabs(["Historia", "Línea de tiempo", "Laureados", "Argentina", "Los datos", "Récords y polémicas", "Explorá"])
+tabs = st.tabs(["Historia", "Línea de tiempo", "Laureados", "Argentina", "Los datos", "Récords y polémicas", "Sin Nobel", "Explorá"])
 
 # ═════════════════════════════════════════════════════════════════════════════
 # 1 · HISTORIA
@@ -770,9 +769,110 @@ with tabs[5]:
         f'<div class="card"><h3>{esc(t)}</h3><p>{esc(d)}</p></div>' for t, d in CONTROVERSIES) + "</div>")
 
 # ═════════════════════════════════════════════════════════════════════════════
-# 7 · EXPLORÁ
+# 7 · SIN NOBEL
 # ═════════════════════════════════════════════════════════════════════════════
+SNUBS = [
+    # (nombre, slug Wikipedia, vida, grupo, campo, es_argentino, por qué lo merecía, por qué no lo ganó)
+    ("Jorge Luis Borges", "Jorge_Luis_Borges", "1899–1986", "Literatura", "Literatura", True,
+     "«Ficciones» y «El Aleph» cambiaron la literatura del siglo XX y anticiparon ideas que hoy son centrales, como los mundos virtuales y la información infinita.",
+     "Fue candidato durante décadas. Se suele atribuir la negativa a sus posturas políticas (en 1976 recibió una distinción de Pinochet) y a la oposición de un miembro influyente de la Academia."),
+    ("René Favaloro", "René_Favaloro", "1923–2000", "Ciencia", "Medicina", True,
+     "En 1967, en la Clínica Cleveland, desarrolló el bypass coronario con vena safena, una cirugía que salvó millones de vidas en todo el mundo.",
+     "El Nobel de Medicina casi nunca premia técnicas quirúrgicas, y desde su muerte en 2000 ya no puede recibirlo: no hay premios póstumos."),
+    ("Julio Cortázar", "Julio_Cortázar", "1914–1984", "Literatura", "Literatura", True,
+     "«Rayuela» y sus cuentos renovaron la narrativa en español y fueron una pieza clave del boom latinoamericano.",
+     "Murió con 69 años, en plena consagración. Dentro del boom, el premio fue para García Márquez en 1982."),
+    ("León Tolstói", "Leo_Tolstoy", "1828–1910", "Literatura", "Literatura", False,
+     "«Guerra y paz» y «Anna Karénina» figuran en casi todas las listas de las mejores novelas de la historia.",
+     "Fue nominado varios años seguidos desde 1902. La Academia desconfiaba de sus ideas religiosas y políticas, y él mismo pidió que no se lo dieran."),
+    ("James Joyce", "James_Joyce", "1882–1941", "Literatura", "Literatura", False,
+     "«Ulises» revolucionó la novela moderna y sigue siendo una referencia obligada para escritores de todo el mundo.",
+     "Para la Academia de su época, su obra era demasiado difícil y escandalosa. Nunca fue un candidato serio."),
+    ("Franz Kafka", "Franz_Kafka", "1883–1924", "Literatura", "Literatura", False,
+     "«La metamorfosis» y «El proceso» dieron nombre a un adjetivo universal: lo «kafkiano».",
+     "Murió joven y casi desconocido. La mayor parte de su obra se publicó después de su muerte."),
+    ("Philip Roth", "Philip_Roth", "1933–2018", "Literatura", "Literatura", False,
+     "Durante medio siglo retrató como nadie la identidad, el deseo y la política de Estados Unidos.",
+     "Fue el eterno favorito de cada octubre. Las razones de la Academia no se conocen: sus deliberaciones son secretas por 50 años."),
+    ("Mahatma Gandhi", "Mahatma_Gandhi", "1869–1948", "Paz", "Paz", False,
+     "Lideró la independencia de India con la resistencia no violenta e inspiró a Martin Luther King y a Nelson Mandela.",
+     "Fue nominado cinco veces y asesinado en 1948. En 1989, al premiar al Dalái Lama, el Comité lo presentó en parte como homenaje a su memoria."),
+    ("Eleanor Roosevelt", "Eleanor_Roosevelt", "1884–1962", "Paz", "Paz", False,
+     "Impulsó la Declaración Universal de los Derechos Humanos, aprobada por la ONU en 1948.",
+     "Fue nominada varias veces, pero el Comité nunca la eligió."),
+    ("Dmitri Mendeléiev", "Dmitri_Mendeleev", "1834–1907", "Ciencia", "Química", False,
+     "Creó la tabla periódica de los elementos y predijo la existencia de elementos que todavía no se habían descubierto.",
+     "En 1906 quedó afuera por muy poco frente a Henri Moissan, en parte por la oposición de Svante Arrhenius. Murió al año siguiente."),
+    ("Nikola Tesla", "Nikola_Tesla", "1856–1943", "Ciencia", "Física", False,
+     "La corriente alterna y el motor de inducción, base de la red eléctrica moderna, salieron de su mente.",
+     "En 1909 el premio de Física fue para Marconi y Braun por la radio, un campo en el que Tesla había hecho aportes clave."),
+    ("Lise Meitner", "Lise_Meitner", "1878–1968", "Ciencia", "Física / Química", False,
+     "Junto a Otto Frisch dio la explicación teórica de la fisión nuclear.",
+     "El Nobel de Química 1944 fue solo para su colega Otto Hahn. Ella, exiliada de la Alemania nazi, fue nominada decenas de veces."),
+    ("Rosalind Franklin", "Rosalind_Franklin", "1920–1958", "Ciencia", "Medicina", False,
+     "Su «Fotografía 51», una imagen del ADN por difracción de rayos X, fue clave para descubrir la doble hélice.",
+     "Murió a los 37 años. En 1962 premiaron a Watson, Crick y Wilkins."),
+    ("Chien-Shiung Wu", "Chien-Shiung_Wu", "1912–1997", "Ciencia", "Física", False,
+     "Su experimento demostró la violación de la paridad, uno de los hallazgos más sorprendentes de la física del siglo XX.",
+     "El premio de 1957 fue para los teóricos Lee y Yang, que habían propuesto la idea que ella comprobó."),
+    ("Jocelyn Bell Burnell", "Jocelyn_Bell_Burnell", "n. 1943", "Ciencia", "Física", False,
+     "Siendo estudiante de doctorado descubrió los púlsares, estrellas de neutrones que giran a gran velocidad.",
+     "El Nobel de 1974 fue para su director de tesis, Antony Hewish, y para Martin Ryle."),
+    ("Edwin Hubble", "Edwin_Hubble", "1889–1953", "Ciencia", "Física", False,
+     "Demostró que existen otras galaxias y que el universo se expande.",
+     "En su época, la astronomía no se consideraba parte de la física para el Nobel. Murió antes de que eso cambiara."),
+    ("Stephen Hawking", "Stephen_Hawking", "1942–2018", "Ciencia", "Física", False,
+     "Predijo que los agujeros negros emiten radiación, uniendo la relatividad y la mecánica cuántica.",
+     "El Nobel exige confirmación experimental, y la «radiación de Hawking» todavía no se pudo observar."),
+    ("Vera Rubin", "Vera_Rubin", "1928–2016", "Ciencia", "Física", False,
+     "Sus mediciones de la rotación de las galaxias aportaron la prueba más fuerte de la existencia de la materia oscura.",
+     "Fue candidata favorita durante años, pero murió sin recibirlo."),
+]
+GROUP_COLOR = {"Literatura": CAT_COLOR["Literatura"], "Ciencia": CAT_COLOR["Física"], "Paz": CAT_COLOR["Paz"]}
+
 with tabs[6]:
+    st.markdown(
+        "<style>"
+        '[data-testid="stButtonGroup"] button[kind$="Active"] { background: #B08D3C1F !important; border-color: #B08D3C !important; }'
+        '[data-testid="stButtonGroup"] button[kind$="Active"] p { color: #8A6A22 !important; font-weight: 600; }'
+        "</style>",
+        unsafe_allow_html=True,
+    )
+    section("Las grandes ausencias", "Gigantes sin Nobel",
+            "Escritores, científicos y líderes que cambiaron el mundo pero nunca recibieron el premio. A veces por política, a veces por las reglas, a veces por llegar tarde.")
+    render("""
+    <div class="grid">
+    <div class="card"><div class="meta">Regla 1</div><h3>No hay premios póstumos</h3>
+    <p>Desde 1974, si alguien muere antes del anuncio ya no puede ser premiado. Muchas ausencias se explican así.</p></div>
+    <div class="card"><div class="meta">Regla 2</div><h3>Máximo tres por premio</h3>
+    <p>La ciencia moderna se hace en equipos grandes, y alguien siempre queda afuera del podio.</p></div>
+    <div class="card"><div class="meta">Regla 3</div><h3>50 años de secreto</h3>
+    <p>Las nominaciones y deliberaciones recién se hacen públicas medio siglo después. Por eso muchos motivos siguen siendo especulación.</p></div>
+    </div>
+    """)
+
+    section("Los nombres", "Merecían el premio, según la opinión pública", "Filtrá por área.")
+    group = st.segmented_control("Área", ["Todos", "Argentina", "Literatura", "Ciencia", "Paz"],
+                                 default="Todos", label_visibility="collapsed", key="snub_filter")
+    group = group or "Todos"
+    shown = [s for s in SNUBS if group == "Todos" or (group == "Argentina" and s[5]) or s[3] == group]
+    snub_img = wiki_images(tuple(s[1] for s in SNUBS))
+    cards = []
+    for name, slug, life, grp, field, is_ar, merit, why_not in shown:
+        tags = pill(field, GROUP_COLOR[grp]) + (pill("Argentina", GOLD_DEEP) if is_ar else "")
+        cards.append(f"""
+        <div class="card"><div class="person">{avatar(snub_img.get(slug), name)}
+        <div>{tags}<h3>{esc(name)}</h3><div class="meta">{esc(life)}</div></div></div>
+        <p><b>Por qué lo merecía.</b> {esc(merit)}</p>
+        <p class="meta" style="margin-top:10px"><b>Por qué no lo ganó.</b> {esc(why_not)}</p></div>""")
+    render('<div class="grid">' + "".join(cards) + "</div>")
+    st.write("")
+    render('<div class="dark"><h3>¿Y los que siguen vivos?</h3><p>Cada octubre, las casas de apuestas y la prensa repiten candidatos que todavía esperan: el «no» de hoy puede ser el «sí» del año que viene. Esta lista se concentra en casos históricos, no en candidatos actuales que todavía pueden ganarlo.</p></div>')
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 8 · EXPLORÁ
+# ═════════════════════════════════════════════════════════════════════════════
+with tabs[7]:
     if not OK:
         no_data()
     else:
